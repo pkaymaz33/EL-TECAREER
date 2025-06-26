@@ -1684,24 +1684,25 @@
                 } else {
                     console.log("Oturum açılıyor...");
                     try {
-                        // Önce özel token ile giriş yapmayı dene
                         if (initialAuthToken) {
+                            // İlk olarak özel token ile giriş yapmayı dene
                             await signInWithCustomToken(auth, initialAuthToken);
                         } else {
-                            // Token yoksa anonim olarak giriş yap
+                            // Token yoksa doğrudan anonim giriş yap
                             await signInAnonymously(auth);
                         }
                     } catch (error) {
-                        console.error("Özel token ile oturum açma hatası, anonim denenecek:", error);
-                        // Eğer özel token ile giriş başarısız olursa, anonim olarak giriş yapmayı dene
+                        // İlk giriş denemesi başarısız olursa logla ve anonim girişe geç
+                        console.warn(`İlk oturum açma denemesi başarısız oldu (${error.code}). Anonim oturum ile devam ediliyor.`);
                         try {
+                            // Fallback olarak her zaman anonim girişi dene
                             await signInAnonymously(auth);
-                        } catch (anonError) {
-                             console.error("Anonim oturum açma da başarısız oldu:", anonError);
-                             // Her ikisi de başarısız olursa, çevrimdışı moda geç
-                             isAuthReady = true; 
-                             currentUserId = 'offline-mode';
-                             showModal(DOMElements.nameModal); 
+                        } catch (fallbackError) {
+                            // Bu da başarısız olursa, oyun çevrimdışı modda başlar
+                            console.error("Tüm oturum açma denemeleri başarısız oldu. Çevrimdışı moda geçiliyor.", fallbackError);
+                            isAuthReady = true; 
+                            currentUserId = 'offline-mode';
+                            showModal(DOMElements.nameModal); 
                         }
                     }
                 }
