@@ -493,7 +493,7 @@
 
         // --- VERİ KAYIT VE YÜKLEME ---
         async function saveGameState(immediate = false) {
-            if (!isAuthReady || !currentUserId) return;
+            if (!isAuthReady || !currentUserId || !db) return;
             clearTimeout(saveTimeoutId);
 
             const performSave = async () => {
@@ -511,7 +511,7 @@
         }
 
         async function loadGameState() {
-            if (!isAuthReady || !currentUserId) return null;
+            if (!isAuthReady || !currentUserId || !db) return null;
             try {
                 const docRef = doc(db, `artifacts/${appId}/users/${currentUserId}/game_state/current_game_state_v4.0`);
                 const docSnap = await getDoc(docRef);
@@ -1625,6 +1625,7 @@
         }
         
         window.onload = async () => {
+          try {
             initializeAudio(); 
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
@@ -1707,6 +1708,19 @@
                     }
                 }
             });
+          } catch (e) {
+            console.error("Kritik başlatma hatası, çevrimdışı modda başlanıyor.", e);
+            isAuthReady = true; 
+            currentUserId = 'offline-mode';
+            auth = null;
+            db = null;
+            
+            // Ensure UI is interactive
+            lucide.createIcons();
+            setupEventListeners();
+            
+            showModal(DOMElements.nameModal); 
+          }
         };
     </script>
 </body>
